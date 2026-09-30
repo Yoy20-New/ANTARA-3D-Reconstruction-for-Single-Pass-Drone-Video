@@ -1,8 +1,98 @@
-# ANTARA: 3D Reconstruction for Single-Pass Drone Video �
-\nANTARA is a high-speed, edge-deployable AI pipeline that converts single-pass monocular drone videos into metric-accurate 3D point clouds, solid meshes (OBJ), and Georeferenced Orthomosaics (GeoTIFF) __without the need for Ground Control Points (GCPs)__. 
-\nBuilt for the __Smart India Hackathon 2025__, this pipeline targets sub-meter accuracy and processes 10-minute 4K video feeds in under 15 minutes using true multiprocessing and Vision Transformers.
-\n---
-\n## 🣨 Step-by-Step Installation Guide (Windows / Linux)
-\nBecause this pipeline integrates complex C++ compilations (3D Gaussian Splatting) and heavy AI models, \_\you must follow these steps precisely\__. 
-\n### Phase 1: System-Level Software (Install these FIRST)
-\nYou cannot just use `pip install` for this project. Your operating system needs the correct compilers and rendering engines installed first.\n\n#### 1. NVIDIA CUDA Toolkit (Required for 3DGS & PyTorch)\n*   __Official Link:__ [CUDA Toolkit 11.8 Archive](https://developer.nvidia.com/cuda-11-8-0-download-archive)\n*   __What to do:__ Download and install the version for your OS.\n*   \_\⚠️ Crucial ANTARA Warning:__ The official NVIDIA site will try to push CUDA 12.x on you. \_Do NOT install CUDA 12.x.__ The 3D Gaussian Splatting rasterizer is highly unstable on Windows with CUDA 12. You *must* install version 11.8 to compile the C++ extensions error-free.\n\n#### 2. Visual Studio 2022 C++ Build Tools (Windows Only)\n*   __Official Link:__ [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)\n*   \_What to do:__ Install it and select the __"Desktop development with C++"__ workload. \n*   \_\⚠️ Crucial ANTARA Warning:__ The `nvcc` CUDA compiler needs this to build the SuGaR and 3DGS meshes.\n\n#### 3. COLMAP (Required for Camera Initialization)\n*   \_Official Link:__ [COLMAP GitHub Releases](https://github.com/colmap/colmap/releases)\n*   __What to do:__ \n    *   *Windows:* Download `COLMAP-x.x-windows-cuda.zip`. Extract it to `C:\COLMAP`. You __must__ add this folder to your Windows System `PATH` environment variable.\n    *   *Linux:* Run `sudo apt-get install colmap`\n*   __⚠️ Crucial ANTARA Warning:__ Our pipeline uses SLAM3RE for the point cloud, but the 3DGS engine *strictly* requires COLMAP's `cameras.bin` files to start training. \n\n#### 4. FFmpeg (Required for Video Extraction)\n*   __Official Link:__ [FFmpeg Download](https://ffmpeg.org/download.html) (For Windows, use [Gyan.dev](https://www.gyan.dev/ffmpeg/builds/))\n*   __What to do:__ Extract the ZIP latest and add the `bin/` folder to your System `PATH`. Verify by typing `ffmpeg -version` in your terminal.\n\n#### 5. Miniconda (Required Python Manager)\n*   __Official Link:__ [Miniconda3 Installers](https://docs.conda.io/en/latest/miniconda.html)\n*   __What to do:__ Install the 64-bit version. We strongly advise against using standard Python/pip, as it routinely corrupts PyTorch CUDA environments.\n\n---\n\n### Phase 2: Project Setup\n\nOnce the system prerequisites are installed, open your __Anaconda Prompt__ (Windows) or Terminal (Linux) and run:\n\n__1. Clone the Repository__\nBecause this project links to external AI repositories (SAM2, SLAM3R, 3DGS), you __must__ use the `--recursive` flag:\n```bash\ngit clone --recursive https://github.com/Yoy20-New/ANTARA-3D-Reconstruction-for-Single-Pass-Drone-Video.git\ncd ANTARA-3D-Reconstruction-for-Single-Pass-Drone-Video\n```\n\n__2. Create the Conda Environment__\n```bash\nconda create -n antara python=3.10 -y\nconda activate antara\n```\n\n__3. Install PyTorch 2.x (CUDA 11.8)__\n*Do not install standard PyTorch.* Force the CUDA 11.8 version:\n```bash\npip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118\n```\n\n__4. Install Project Requirements__\n```bash\npip install -r backend/requirements.txt\n```\n\n__5. Download AI Weights & Apply Patches__\nWe have written automated scripts to fetch the heavy AI models (like YOLO and SAM2) and apply our custom TensorRT modifications to the submodules.\n```bash\npython scripts/download_weights.py\npython scripts/apply_patches.py\n```\n\n---\n\n## 🚀 Running the Pipeline\n\nYou can run the full pipeline in two ways:\n\n__1. Headless CLI Mode:__\n```bash\npython run_pipeline.py --video videos/drone_footage.mp4 --gps videos/DJI_gps.SRT --output output/\n```\n\n__2. Interactive Web UI:__\nStart the FastAPI background server:\n```bash\npython backend/server.py\n```\nThen navigate to `http://localhost:8000` to upload videos and view live metrics in the 3D Geographic HUD.\n\n---\n*Built for SIH 2025. This project utilizes code from SLAM3R, Meta Segment Anything 2, and Inria Gaussian Splatting.*
+﻿# ANTARA: 3D Reconstruction for Single-Pass Drone Video
+
+ANTARA is a high-speed, edge-deployable AI pipeline that converts single-pass monocular drone videos into metric-accurate 3D point clouds, solid meshes (OBJ), and Georeferenced Orthomosaics (GeoTIFF) **without the need for Ground Control Points (GCPs)**. 
+
+Built for the **Smart India Hackathon 2025**, this pipeline targets sub-meter accuracy and processes 10-minute 4K video feeds in under 15 minutes using true multiprocessing and Vision Transformers.
+
+---
+
+## Step-by-Step Installation Guide (Windows / Linux)
+
+Because this pipeline integrates complex C++ compilations (3D Gaussian Splatting) and heavy AI models, **you must follow these steps precisely**. 
+
+### Phase 1: System-Level Software (Install these FIRST)
+
+You cannot just use `pip install` for this project. Your operating system needs the correct compilers and rendering engines installed first.
+
+#### 1. NVIDIA CUDA Toolkit (Required for 3DGS & PyTorch)
+*   **Official Link:** [CUDA Toolkit 11.8 Archive](https://developer.nvidia.com/cuda-11-8-0-download-archive)
+*   **What to do:** Download and install the version for your OS.
+*   **Crucial ANTARA Warning:** The official NVIDIA site will try to push CUDA 12.x on you. **Do NOT install CUDA 12.x.** The 3D Gaussian Splatting rasterizer is highly unstable on Windows with CUDA 12. You *must* install version 11.8 to compile the C++ extensions error-free.
+
+#### 2. Visual Studio 2022 C++ Build Tools (Windows Only)
+*   **Official Link:** [Visual Studio Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+*   **What to do:** Install it and select the **"Desktop development with C++"** workload. 
+*   **Crucial ANTARA Warning:** The `nvcc` CUDA compiler needs this to build the SuGaR and 3DGS meshes.
+
+#### 3. COLMAP (Required for Camera Initialization)
+*   **Official Link:** [COLMAP GitHub Releases](https://github.com/colmap/colmap/releases)
+*   **What to do:** 
+    *   *Windows:* Download `COLMAP-x.x-windows-cuda.zip`. Extract it to `C:\COLMAP`. You **must** add this folder to your Windows System `PATH` environment variable.
+    *   *Linux:* Run `sudo apt-get install colmap`
+*   **Crucial ANTARA Warning:** Our pipeline uses SLAM3R for the point cloud, but the 3DGS engine *strictly* requires COLMAP's `cameras.bin` files to start training. 
+
+#### 4. FFmpeg (Required for Video Extraction)
+*   **Official Link:** [FFmpeg Download](https://ffmpeg.org/download.html) (For Windows, use [Gyan.dev](https://www.gyan.dev/ffmpeg/builds/))
+*   **What to do:** Extract the ZIP and add the `bin/` folder to your System `PATH`. Verify by typing `ffmpeg -version` in your terminal.
+
+#### 5. Miniconda (Required Python Manager)
+*   **Official Link:** [Miniconda3 Installers](https://docs.conda.io/en/latest/miniconda.html)
+*   **What to do:** Install the 64-bit version. We strongly advise against using standard Python/pip, as it routinely corrupts PyTorch CUDA environments.
+
+---
+
+### Phase 2: Project Setup
+
+Once the system prerequisites are installed, open your **Anaconda Prompt** (Windows) or Terminal (Linux) and run:
+
+**1. Clone the Repository**
+Because this project links to external AI repositories (SAM2, SLAM3R, 3DGS), you **must** use the `--recursive` flag:
+```bash
+git clone --recursive https://github.com/Yoy20-New/ANTARA-3D-Reconstruction-for-Single-Pass-Drone-Video.git
+cd ANTARA-3D-Reconstruction-for-Single-Pass-Drone-Video
+```
+
+**2. Create the Conda Environment**
+```bash
+conda create -n antara python=3.10 -y
+conda activate antara
+```
+
+**3. Install PyTorch 2.x (CUDA 11.8)**
+*Do not install standard PyTorch.* Force the CUDA 11.8 version:
+```bash
+pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+```
+
+**4. Install Project Requirements**
+```bash
+pip install -r backend/requirements.txt
+```
+
+**5. Download AI Weights & Apply Patches**
+We have written automated scripts to fetch the heavy AI models (like YOLO and SAM2) and apply our custom TensorRT modifications to the submodules.
+```bash
+python scripts/download_weights.py
+python scripts/apply_patches.py
+```
+
+---
+
+## Running the Pipeline
+
+You can run the full pipeline in two ways:
+
+**1. Headless CLI Mode:**
+```bash
+python run_pipeline.py --video videos/drone_footage.mp4 --gps videos/DJI_gps.SRT --output output/
+```
+
+**2. Interactive Web UI:**
+Start the FastAPI background server:
+```bash
+python backend/server.py
+```
+Then navigate to `http://localhost:8000` to upload videos and view live metrics in the 3D Geographic HUD.
+
+---
+*Built for SIH 2025. This project utilizes code from SLAM3R, Meta Segment Anything 2, and Inria Gaussian Splatting.*

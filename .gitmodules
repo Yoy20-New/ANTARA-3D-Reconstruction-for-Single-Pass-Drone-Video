@@ -1,4 +1,4 @@
-﻿[submodule "SLAM3R"]
+[submodule "SLAM3R"]
 	path = SLAM3R
 	url = https://github.com/PKU-VCL-3DV/SLAM3R.git
 [submodule "sam2"]

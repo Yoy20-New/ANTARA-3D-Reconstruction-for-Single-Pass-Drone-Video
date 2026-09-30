@@ -1,0 +1,67 @@
+﻿# Python & Bytecode
+__pycache__/
+*.py[cod]
+*.class
+*.so
+.dist/
+build/
+dist/
+*.egg-info/
+
+# Environments & IDEs
+.env
+.venv/
+env/
+venv/
+.vscode/
+.idea/
+
+# ANTARA Pipeline Runtime Directories
+output/
+uploads/
+gps/
+videos/*.MP4
+videos/*.mp4
+videos/*.avi
+videos/*.mov
+videos/*.SRT
+videos/*.srt
+
+# Model Weights & Large Binaries
+checkpoints/
+*.pt
+*.pth
+*.bin
+*.onnx
+*.engine
+*.ckpt
+*.safetensors
+*.ts
+!*.graphql.ts
+mobileclip_blt.ts
+yoloe-11s-seg.pt
+
+# Spatial / 3D Deliverables & Intermediate Arrays
+*.las
+*.laz
+*.ply
+*.obj
+*.fbx
+*.glb
+*.tif
+*.tiff
+*.npz
+*.npy
+
+# Submodule Build Artifacts
+SLAM3R/results/
+SLAM3R/**/build/
+SuGaR/nvdiffrast/
+
+# Temporary / Scratch Clutter
+New folder/
+test.py
+make_pdf.py
+.~lock*
+*.bak
+*.tmp

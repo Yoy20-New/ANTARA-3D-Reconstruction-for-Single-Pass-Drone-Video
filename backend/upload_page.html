@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ANTARA — Upload</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #111;
+            --surface: rgba(20,20,20,0.92);
+            --border: rgba(255,255,255,0.1);
+            --border-hi: rgba(255,255,255,0.22);
+            --text: #e5e5e5;
+            --dim: #888;
+            --muted: #444;
+            --radius: 10px;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+            font-size: clamp(13px, 1.1vw, 15px);
+        }
+
+        /* ── Top Brand ── */
+        .brand {
+            position: fixed;
+            top: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 999px;
+            padding: 6px 14px;
+            backdrop-filter: blur(16px);
+        }
+        .brand svg { width: 14px; height: 14px; color: var(--dim); }
+        .brand-name {
+            font-size: clamp(10px, 0.8vw, 12px);
+            font-weight: 600;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            color: var(--dim);
+        }
+
+        /* ── Card ── */
+        .card {
+            width: 100%;
+            max-width: 560px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            backdrop-filter: blur(20px);
+            overflow: hidden;
+        }
+
+        .card-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .card-title {
+            font-size: clamp(13px, 1vw, 15px);
+            font-weight: 600;
+            color: var(--text);
+        }
+        .card-sub {
+            font-size: clamp(11px, 0.8vw, 12px);
+            color: var(--dim);
+            margin-top: 3px;
+        }
+
+        .card-body { padding: 20px 24px; display: flex; flex-direction: column; gap: 16px; }
+
+        /* ── Drop Zone ── */
+        .dropzone {
+            border: 1.5px dashed var(--muted);
+            border-radius: 8px;
+            padding: 28px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            transition: border-color 0.15s, background 0.15s;
+            position: relative;
+        }
+        .dropzone:hover, .dropzone.drag-over {
+            border-color: var(--border-hi);
+            background: rgba(255,255,255,0.03);
+        }
+        .dropzone input[type="file"] {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            cursor: pointer;
+            width: 100%;
+            height: 100%;
+        }
+        .dropzone-icon { color: var(--muted); }
+        .dropzone-icon svg { width: 36px; height: 36px; stroke-width: 1.3; }
+        .dropzone-title {
+            font-size: clamp(12px, 0.9vw, 14px);
+            font-weight: 600;
+            color: var(--text);
+        }
+        .dropzone-sub {
+            font-size: clamp(10px, 0.75vw, 11px);
+            color: var(--dim);
+        }
+        .file-chosen {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border-hi);
+            border-radius: 6px;
+            padding: 8px 12px;
+            font-size: clamp(11px, 0.8vw, 12px);
+            width: 100%;
+        }
+        .file-chosen.visible { display: flex; }
+        .file-chosen svg { width: 13px; height: 13px; color: var(--dim); flex-shrink: 0; }
+        .file-chosen .fc-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(10px, 0.75vw, 11px);
+            color: var(--dim);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+        }
+        .file-chosen .fc-size {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(10px, 0.75vw, 11px);
+            color: var(--text);
+            flex-shrink: 0;
+        }
+
+        /* ── GPS Row ── */
+        .gps-row {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .gps-label-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .label {
+            font-size: clamp(11px, 0.85vw, 12px);
+            font-weight: 500;
+            color: var(--dim);
+        }
+        .demo-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: clamp(10px, 0.75vw, 11px);
+            color: var(--dim);
+            cursor: pointer;
+        }
+        .demo-toggle input { accent-color: #888; cursor: pointer; }
+
+        .gps-picker {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-pick-gps {
+            flex-shrink: 0;
+            background: transparent;
+            border: 1px solid var(--border-hi);
+            color: var(--dim);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: clamp(10px, 0.75vw, 11px);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-pick-gps:hover { color: var(--text); border-color: rgba(255,255,255,0.35); }
+        .btn-pick-gps:disabled { opacity: 0.3; cursor: not-allowed; }
+        #gps-file-input { display: none; }
+        .gps-chosen-name {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(10px, 0.75vw, 11px);
+            color: var(--dim);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .gps-note {
+            font-size: clamp(10px, 0.72vw, 11px);
+            color: var(--muted);
+            font-style: italic;
+        }
+
+        /* ── Advanced Settings ── */
+        .adv-settings-toggle {
+            font-size: clamp(11px, 0.8vw, 12px);
+            color: var(--dim);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 4px;
+            user-select: none;
+        }
+        .adv-settings-toggle:hover { color: var(--text); }
+        .adv-settings-toggle svg { width: 14px; height: 14px; transition: transform 0.2s; }
+        .adv-settings-toggle.open svg { transform: rotate(90deg); }
+        
+        .adv-settings-panel {
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            background: rgba(0,0,0,0.2);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 14px;
+            margin-bottom: 8px;
+        }
+        .adv-settings-panel.visible { display: flex; }
+        
+        .adv-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 12px;
+        }
+        .adv-label {
+            font-size: clamp(11px, 0.8vw, 12px);
+            color: var(--text);
+            font-weight: 500;
+        }
+        .adv-sub {
+            font-size: clamp(9px, 0.65vw, 10px);
+            color: var(--muted);
+            display: block;
+            margin-top: 2px;
+        }
+        .adv-control {
+            background: var(--surface);
+            border: 1px solid var(--border-hi);
+            color: var(--text);
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: clamp(11px, 0.8vw, 12px);
+            outline: none;
+            width: 140px;
+        }
+        .adv-control:focus { border-color: rgba(255,255,255,0.4); }
+        .btn-submit {
+            width: 100%;
+            padding: 10px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--border-hi);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: inherit;
+            font-size: clamp(12px, 0.9vw, 14px);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        .btn-submit:hover:not(:disabled) { background: rgba(255,255,255,0.16); }
+        .btn-submit:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        /* ── Progress Panel ── */
+        .progress-panel {
+            display: none;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .progress-panel.visible { display: flex; }
+
+        .stage-name {
+            font-size: clamp(11px, 0.85vw, 13px);
+            font-weight: 600;
+            color: var(--text);
+        }
+        .stage-detail {
+            font-size: clamp(10px, 0.8vw, 12px);
+            color: var(--dim);
+            min-height: 16px;
+        }
+
+        .prog-bar-track {
+            width: 100%;
+            height: 3px;
+            background: rgba(255,255,255,0.08);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        .prog-bar-fill {
+            height: 100%;
+            background: #fff;
+            border-radius: 2px;
+            transition: width 0.4s ease;
+            width: 0%;
+        }
+
+        /* Stage steps */
+        .stages-list {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .stage-step {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: clamp(10px, 0.78vw, 12px);
+            color: var(--muted);
+            transition: color 0.2s;
+        }
+        .stage-step.active { color: var(--text); }
+        .stage-step.done   { color: var(--dim); }
+        .step-dot {
+            width: 6px; height: 6px;
+            border-radius: 50%;
+            background: var(--muted);
+            flex-shrink: 0;
+            transition: background 0.2s;
+        }
+        .stage-step.active .step-dot { background: #fff; }
+        .stage-step.done   .step-dot { background: var(--dim); }
+
+        /* Metrics card */
+        .metrics-card {
+            display: none;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        .metrics-card.visible { display: grid; }
+        .metric-box {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 8px 10px;
+        }
+        .metric-label {
+            font-size: clamp(8px, 0.65vw, 10px);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            color: var(--muted);
+        }
+        .metric-val {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: clamp(12px, 1vw, 14px);
+            font-weight: 600;
+            color: var(--text);
+            margin-top: 2px;
+        }
+
+        /* View in 3D button */
+        .btn-view {
+            display: none;
+            width: 100%;
+            padding: 11px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 8px;
+            color: #fff;
+            font-family: inherit;
+            font-size: clamp(12px, 0.9vw, 14px);
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            text-decoration: none;
+            transition: background 0.15s;
+        }
+        .btn-view.visible { display: block; }
+        .btn-view:hover { background: rgba(255,255,255,0.2); }
+
+        /* Error message */
+        .error-msg {
+            display: none;
+            background: rgba(220,50,50,0.08);
+            border: 1px solid rgba(220,50,50,0.25);
+            border-radius: 6px;
+            padding: 10px 12px;
+            font-size: clamp(11px, 0.8vw, 12px);
+            color: #f87171;
+        }
+        .error-msg.visible { display: block; }
+
+        /* New job button */
+        .btn-new {
+            display: none;
+            background: transparent;
+            border: 1px solid var(--border-hi);
+            color: var(--dim);
+            padding: 7px 14px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: clamp(10px, 0.75vw, 11px);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+            align-self: center;
+        }
+        .btn-new.visible { display: block; }
+        .btn-new:hover { color: var(--text); }
+    </style>
+</head>
+<body>
+
+    <!-- Brand -->
+    <div class="brand">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+            <polyline points="2 17 12 22 22 17"></polyline>
+            <polyline points="2 12 12 17 22 12"></polyline>
+        </svg>
+        <span class="brand-name">Antara</span>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <div class="card-title">3D Reconstruction</div>
+            <div class="card-sub">Upload drone video to generate a georeferenced point cloud</div>
+        </div>
+
+        <div class="card-body">
+
+            <!-- Upload form (shown at start) -->
+            <div id="upload-form">
+
+                <!-- Video drop zone -->
+                <div class="dropzone" id="video-dropzone">
+                    <input type="file" id="video-file-input" accept=".mp4,.mov,.avi,.mkv">
+                    <div class="dropzone-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M15 10l4.553-2.069A1 1 0 0 1 21 8.845v6.31a1 1 0 0 1-1.447.894L15 14"></path>
+                            <rect x="2" y="6" width="13" height="12" rx="2"></rect>
+                        </svg>
+                    </div>
+                    <div class="dropzone-title">Drop drone video here</div>
+                    <div class="dropzone-sub">.mp4 · .mov · .avi · .mkv — up to 10 GB</div>
+                </div>
+
+                <!-- Video chosen indicator -->
+                <div class="file-chosen" id="video-chosen">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M15 10l4.553-2.069A1 1 0 0 1 21 8.845v6.31a1 1 0 0 1-1.447.894L15 14"></path>
+                        <rect x="2" y="6" width="13" height="12" rx="2"></rect>
+                    </svg>
+                    <span class="fc-name" id="video-chosen-name">—</span>
+                    <span class="fc-size" id="video-chosen-size">—</span>
+                </div>
+
+                <!-- GPS / IMU -->
+                <div class="gps-row">
+                    <div class="gps-label-row">
+                        <span class="label">GPS / IMU Telemetry</span>
+                        <label class="demo-toggle">
+                            <input type="checkbox" id="demo-mode-chk">
+                            Demo mode (no GPS)
+                        </label>
+                    </div>
+                    <div class="gps-picker">
+                        <button class="btn-pick-gps" id="btn-pick-gps">Choose file</button>
+                        <input type="file" id="gps-file-input" accept=".json,.srt,.csv">
+                        <span class="gps-chosen-name" id="gps-chosen-name">No file selected</span>
+                    </div>
+                    <div class="gps-note" id="gps-note">Supports .json (DJI) and .srt subtitle telemetry. Without GPS, accuracy cannot be verified.</div>
+                </div>
+
+                <div class="adv-settings-toggle" id="adv-toggle">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                    </svg>
+                    Advanced Processing Settings
+                </div>
+                
+                <div class="adv-settings-panel" id="adv-panel">
+                    <!-- Checkbox options -->
+                    <div class="adv-checkbox-group" style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                        <label class="demo-toggle" style="color: var(--text);">
+                            <input type="checkbox" id="adv-no-sam">
+                            Disable SAM 2 (Use Fast Masking for speed)
+                        </label>
+                        <label class="demo-toggle" style="color: var(--text);">
+                            <input type="checkbox" id="adv-no-gs" checked>
+                            Disable Gaussian Splatting (Saves 10+ mins)
+                        </label>
+                    </div>
+                    
+                    <div class="adv-row">
+                        <div>
+                            <span class="adv-label">Frame Extraction</span>
+                            <span class="adv-sub">Frames per second (target)</span>
+                        </div>
+                        <select class="adv-control" id="adv-fps">
+                            <option value="2">2 FPS (Fastest)</option>
+                            <option value="3">3 FPS</option>
+                            <option value="5" selected>5 FPS (Default)</option>
+                            <option value="10">10 FPS (Slow)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="adv-row">
+                        <div>
+                            <span class="adv-label">SLAM Stride</span>
+                            <span class="adv-sub">Keyframe jump interval</span>
+                        </div>
+                        <select class="adv-control" id="adv-stride">
+                            <option value="2">2 (Dense)</option>
+                            <option value="4" selected>4 (Default)</option>
+                            <option value="6">6 (Sparse/Fast)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="adv-row">
+                        <div>
+                            <span class="adv-label">Point Density</span>
+                            <span class="adv-sub">Max fused cloud size</span>
+                        </div>
+                        <select class="adv-control" id="adv-points">
+                            <option value="200000">200k (Fast)</option>
+                            <option value="500000" selected>500k (Default)</option>
+                            <option value="1000000">1 Million (Heavy)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <button class="btn-submit" id="btn-submit" disabled>Start Reconstruction</button>
+            </div>
+
+            <!-- Progress panel (shown after submit) -->
+            <div class="progress-panel" id="progress-panel">
+
+                <div>
+                    <div class="stage-name" id="stage-name">Uploading…</div>
+                    <div class="stage-detail" id="stage-detail">Sending video to server…</div>
+                </div>
+
+                <div class="prog-bar-track">
+                    <div class="prog-bar-fill" id="prog-bar-fill"></div>
+                </div>
+
+                <div class="stages-list">
+                    <div class="stage-step" id="step-upload">
+                        <div class="step-dot"></div>Upload
+                    </div>
+                    <div class="stage-step" id="step-preprocess">
+                        <div class="step-dot"></div>Stage 1 — Preprocessing &amp; masking
+                    </div>
+                    <div class="stage-step" id="step-slam">
+                        <div class="step-dot"></div>Stage 2 — SLAM3R reconstruction
+                    </div>
+                    <div class="stage-step" id="step-geo">
+                        <div class="step-dot"></div>Stage 3 — GPS georeferencing
+                    </div>
+                    <div class="stage-step" id="step-deliver">
+                        <div class="step-dot"></div>Stage 4 — Exporting deliverables
+                    </div>
+                    <div class="stage-step" id="step-eval">
+                        <div class="step-dot"></div>Stage 5 — Accuracy evaluation
+                    </div>
+                </div>
+
+                <!-- Final metrics -->
+                <div class="metrics-card" id="metrics-card">
+                    <div class="metric-box">
+                        <div class="metric-label">Points</div>
+                        <div class="metric-val" id="m-points">—</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Keyframes</div>
+                        <div class="metric-val" id="m-keyframes">—</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Accuracy (RMSE)</div>
+                        <div class="metric-val" id="m-rmse">—</div>
+                    </div>
+                    <div class="metric-box">
+                        <div class="metric-label">Elapsed</div>
+                        <div class="metric-val" id="m-elapsed">—</div>
+                    </div>
+                </div>
+
+                <div class="error-msg" id="error-msg"></div>
+
+                <a class="btn-view" id="btn-view" href="/viewer">View in 3D →</a>
+                <button class="btn-new" id="btn-new">Start new reconstruction</button>
+                <button class="btn-cancel" id="btn-cancel" style="background: transparent; border: 1px solid rgba(248,113,113,0.3); color: #f87171; padding: 7px 14px; border-radius: 6px; cursor: pointer; align-self: center; transition: all 0.15s; font-family: inherit; font-size: clamp(10px, 0.75vw, 11px);">Cancel Processing</button>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+    // ── Element refs ──
+    const videoInput    = document.getElementById('video-file-input');
+    const videoDropzone = document.getElementById('video-dropzone');
+    const videoChosen   = document.getElementById('video-chosen');
+    const videoName     = document.getElementById('video-chosen-name');
+    const videoSize     = document.getElementById('video-chosen-size');
+    const gpsInput      = document.getElementById('gps-file-input');
+    const btnPickGps    = document.getElementById('btn-pick-gps');
+    const gpsName       = document.getElementById('gps-chosen-name');
+    const demoChk       = document.getElementById('demo-mode-chk');
+    const gpsNote       = document.getElementById('gps-note');
+    const btnSubmit     = document.getElementById('btn-submit');
+    const uploadForm    = document.getElementById('upload-form');
+    const advToggle     = document.getElementById('adv-toggle');
+    const advPanel      = document.getElementById('adv-panel');
+
+    // ── Toggle Advanced Settings ──
+    advToggle.addEventListener('click', () => {
+        advToggle.classList.toggle('open');
+        advPanel.classList.toggle('visible');
+    });
+    const progressPanel = document.getElementById('progress-panel');
+    const stageName     = document.getElementById('stage-name');
+    const stageDetail   = document.getElementById('stage-detail');
+    const progFill      = document.getElementById('prog-bar-fill');
+    const metricsCard   = document.getElementById('metrics-card');
+    const errorMsg      = document.getElementById('error-msg');
+    const btnView       = document.getElementById('btn-view');
+    const btnNew        = document.getElementById('btn-new');
+    const btnCancel     = document.getElementById('btn-cancel');
+
+    btnCancel.addEventListener('click', async () => {
+        btnCancel.disabled = true;
+        btnCancel.textContent = "Canceling...";
+        await fetch('/api/cancel', { method: 'POST' });
+    });
+
+    const STEPS = {
+        upload:     document.getElementById('step-upload'),
+        preprocess: document.getElementById('step-preprocess'),
+        slam:       document.getElementById('step-slam'),
+        geo:        document.getElementById('step-geo'),
+        deliver:    document.getElementById('step-deliver'),
+        eval:       document.getElementById('step-eval'),
+    };
+
+    let selectedVideo = null;
+    let selectedGps   = null;
+    let pollTimer     = null;
+
+    // ── Helpers ──
+    function fmtBytes(b) {
+        if (b > 1e9) return (b/1e9).toFixed(1) + ' GB';
+        if (b > 1e6) return (b/1e6).toFixed(0) + ' MB';
+        return (b/1e3).toFixed(0) + ' KB';
+    }
+
+    function updateSubmitBtn() {
+        btnSubmit.disabled = !selectedVideo && !demoChk.checked
+            ? true
+            : !selectedVideo;
+    }
+
+    // ── Video file selection ──
+    function onVideoSelected(file) {
+        if (!file) return;
+        selectedVideo = file;
+        videoDropzone.querySelector('.dropzone-title').textContent = 'Video selected';
+        videoChosen.classList.add('visible');
+        videoName.textContent = file.name;
+        videoSize.textContent = fmtBytes(file.size);
+        updateSubmitBtn();
+    }
+
+    videoInput.addEventListener('change', () => onVideoSelected(videoInput.files[0]));
+
+    // Drag over dropzone
+    videoDropzone.addEventListener('dragover', e => { e.preventDefault(); videoDropzone.classList.add('drag-over'); });
+    videoDropzone.addEventListener('dragleave', () => videoDropzone.classList.remove('drag-over'));
+    videoDropzone.addEventListener('drop', e => {
+        e.preventDefault();
+        videoDropzone.classList.remove('drag-over');
+        onVideoSelected(e.dataTransfer.files[0]);
+    });
+
+    // ── GPS file ──
+    btnPickGps.addEventListener('click', () => gpsInput.click());
+    gpsInput.addEventListener('change', () => {
+        const f = gpsInput.files[0];
+        if (f) { selectedGps = f; gpsName.textContent = f.name; }
+    });
+
+    demoChk.addEventListener('change', () => {
+        const demo = demoChk.checked;
+        btnPickGps.disabled = demo;
+        gpsName.textContent = demo ? 'Disabled — demo mode' : (selectedGps ? selectedGps.name : 'No file selected');
+        gpsNote.textContent = demo
+            ? '⚠ Demo mode: GPS is skipped. Accuracy will be marked unverified.'
+            : 'Supports .json (DJI) and .srt subtitle telemetry. Without GPS, accuracy cannot be verified.';
+        updateSubmitBtn();
+    });
+
+    // ── Submit ──
+    btnSubmit.addEventListener('click', startUpload);
+
+    async function startUpload() {
+        if (!selectedVideo) return;
+
+        // Switch to progress panel
+        uploadForm.style.display = 'none';
+        progressPanel.classList.add('visible');
+        setStep('upload');
+        stageName.textContent  = 'Uploading…';
+        stageDetail.textContent = `Sending ${fmtBytes(selectedVideo.size)} to server…`;
+
+        const fd = new FormData();
+        fd.append('video', selectedVideo);
+        if (selectedGps && !demoChk.checked) fd.append('gps', selectedGps);
+        if (demoChk.checked) fd.append('demo_mode', 'true');
+        
+        // Append advanced settings
+        // If "Disable SAM 2" is checked, use_sam is false.
+        fd.append('use_sam', (!document.getElementById('adv-no-sam').checked).toString());
+        // If "Disable GS" is checked, enable_gs is false.
+        fd.append('enable_gs', (!document.getElementById('adv-no-gs').checked).toString());
+        
+        fd.append('target_fps', document.getElementById('adv-fps').value);
+        fd.append('keyframe_stride', document.getElementById('adv-stride').value);
+        fd.append('point_density', document.getElementById('adv-points').value);
+
+        // Use XHR for upload progress events
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/upload');
+
+        xhr.upload.onprogress = e => {
+            if (e.lengthComputable) {
+                const pct = Math.round((e.loaded / e.total) * 20); // upload = 0–20%
+                progFill.style.width = pct + '%';
+                stageDetail.textContent = `Uploading — ${fmtBytes(e.loaded)} / ${fmtBytes(e.total)}`;
+            }
+        };
+
+        xhr.onload = () => {
+            if (xhr.status === 200 || xhr.status === 201) {
+                // Upload done — start polling
+                progFill.style.width = '22%';
+                stageName.textContent   = 'Starting pipeline…';
+                stageDetail.textContent = 'Server received the file, initialising reconstruction…';
+                pollTimer = setInterval(pollStatus, 2000);
+            } else {
+                let msg = 'Upload failed.';
+                try { msg = JSON.parse(xhr.responseText).detail || msg; } catch {}
+                showError(msg);
+            }
+        };
+
+        xhr.onerror = () => showError('Network error — could not reach the server.');
+        xhr.send(fd);
+    }
+
+    // ── Poll /api/status every 2s ──
+    async function pollStatus() {
+        let data;
+        try {
+            const r = await fetch('/api/status');
+            data = await r.json();
+        } catch { return; }
+
+        const pct = data.progress || 0;
+        progFill.style.width = Math.max(22, pct) + '%';
+        stageName.textContent   = data.stage_name   || '…';
+        stageDetail.textContent = data.stage_detail || '…';
+
+        // Highlight correct step
+        if      (pct < 10) setStep('upload');
+        else if (pct < 27) setStep('preprocess');
+        else if (pct < 66) setStep('slam');
+        else if (pct < 80) setStep('geo');
+        else if (pct < 94) setStep('deliver');
+        else               setStep('eval');
+
+        if (data.status === 'completed') {
+            clearInterval(pollTimer);
+            progFill.style.width = '100%';
+            markAllDone();
+            showMetrics(data.metrics);
+            btnView.classList.add('visible');
+            btnNew.classList.add('visible');
+            btnCancel.style.display = 'none';
+        } else if (data.status === 'error') {
+            clearInterval(pollTimer);
+            showError(data.error_message || 'An unknown error occurred during reconstruction.');
+            btnNew.classList.add('visible');
+            btnCancel.style.display = 'none';
+        }
+    }
+
+    function setStep(active) {
+        const order = ['upload', 'preprocess', 'slam', 'geo', 'deliver', 'eval'];
+        const idx = order.indexOf(active);
+        order.forEach((k, i) => {
+            STEPS[k].classList.remove('active', 'done');
+            if (i < idx)       STEPS[k].classList.add('done');
+            else if (i === idx) STEPS[k].classList.add('active');
+        });
+    }
+
+    function markAllDone() {
+        Object.values(STEPS).forEach(el => {
+            el.classList.remove('active');
+            el.classList.add('done');
+        });
+    }
+
+    function showMetrics(m) {
+        metricsCard.classList.add('visible');
+        document.getElementById('m-points').textContent    = m.points_count ? m.points_count.toLocaleString() : '—';
+        document.getElementById('m-keyframes').textContent = m.keyframes    || '—';
+        document.getElementById('m-rmse').textContent      = m.rmse         || '—';
+        document.getElementById('m-elapsed').textContent   = m.elapsed      || '—';
+    }
+
+    function showError(msg) {
+        errorMsg.textContent = '⚠ ' + msg;
+        errorMsg.classList.add('visible');
+        stageName.textContent   = 'Failed';
+        stageDetail.textContent = '';
+    }
+
+    // ── New reconstruction ──
+    btnNew.addEventListener('click', async () => {
+        await fetch('/api/reset', { method: 'POST' });
+        location.reload();
+    });
+
+    // ── On load: check if a job is already running ──
+    window.addEventListener('load', async () => {
+        try {
+            const r = await fetch('/api/status');
+            const d = await r.json();
+            if (d.status === 'processing' || d.status === 'uploading') {
+                uploadForm.style.display = 'none';
+                progressPanel.classList.add('visible');
+                pollTimer = setInterval(pollStatus, 2000);
+                pollStatus();
+            }
+        } catch {}
+    });
+    </script>
+</body>
+</html>

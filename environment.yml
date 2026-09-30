@@ -1,0 +1,36 @@
+# Project ANTARA — conda environment for the REAL SLAM3R + SAM 2 pipeline.
+#
+#   conda env create -f environment.yml
+#   conda activate antara
+#
+# System Python is 3.14 (no PyTorch wheels exist for it) — this dedicated 3.11
+# env is required. torch/torchvision/torchaudio are installed through the
+# environment's pip resolver with CUDA 11.8 wheels.
+name: antara
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - cmake=3.14.0
+  - pip
+  - pip:
+      # --- PyTorch (CUDA 11.8 wheels; compatible with SAM 2 and SLAM3R) ---
+      - --extra-index-url https://download.pytorch.org/whl/cu118
+      - torch==2.5.1
+      - torchvision==0.20.1
+      - torchaudio==2.5.1
+      # --- ANTARA pipeline deps ---
+      - opencv-python
+      - numpy
+      - scipy
+      - laspy
+      - rasterio
+      - open3d
+      - trimesh
+      - flask
+      # --- SLAM3R / SAM 2 support (repos installed separately; see SETUP_FROM_SCRATCH.md) ---
+      - huggingface_hub
+      - einops
+      - roma
+      - tqdm
+      - pytest

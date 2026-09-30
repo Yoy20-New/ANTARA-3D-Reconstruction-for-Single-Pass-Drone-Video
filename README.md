@@ -44,6 +44,7 @@ pip install -r backend/requirements.txt
 We have provided a script to automatically download the heavy .pt files required for SAM2 and SLAM3R.
 \\\ash
 python scripts/download_weights.py
+python scripts/apply_patches.py
 \\\
 
 ---
